@@ -11,7 +11,6 @@ import board
 import busio
 import digitalio
 import storage
-import time
 
 import adafruit_sdcard
 import adafruit_vs1053

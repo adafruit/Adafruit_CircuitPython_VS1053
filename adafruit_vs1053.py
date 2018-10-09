@@ -26,24 +26,46 @@
 Driver for interacting and playing media files with the VS1053 audio codec over
 a SPI connection.
 
-NOTE: This is not currently working for audio playback of files.  Only sine
-wave test currently works.  The problem is that pure Python code is currently
-too slow to keep up with feeding data to the VS1053 fast enough.  There's no
-interrupt support so Python code has to monitor the DREQ line and provide a
-small buffer of data when ready, but the overhead of the interpretor means we
-can't keep up.  Optimizing SPI to use DMA transfers could help but ultimately
-an interrupt-based approach is likely what can make this work better (or C
-functions built in to custom builds that monitor the DREQ line and feed a
-buffer of data).
+    NOTE: This is not currently working for audio playback of files.  Only sine
+    wave test currently works.  The problem is that pure Python code is currently
+    too slow to keep up with feeding data to the VS1053 fast enough.  There's no
+    interrupt support so Python code has to monitor the DREQ line and provide a
+    small buffer of data when ready, but the overhead of the interpretor means we
+    can't keep up.  Optimizing SPI to use DMA transfers could help but ultimately
+    an interrupt-based approach is likely what can make this work better (or C
+    functions built in to custom builds that monitor the DREQ line and feed a
+    buffer of data).
 
 * Author(s): Tony DiCola
-"""
-import digitalio
-import time
 
+Implementation Notes
+--------------------
+
+**Hardware:**
+
+* `Adafruit Music Maker FeatherWing - Synth Player <https://www.adafruit.com/product/3357>`_
+* `Music Maker FeatherWing w/ Amp - Synth Player <https://www.adafruit.com/product/3436>`_
+* `VS1053B MP3/WAV/OGG/MIDI Player & Recorder (CODEC) Chip <https://www.adafruit.com/product/1681>`_
+* `VS1053 Codec + MicroSD Breakout - Play + Record - v4 <https://www.adafruit.com/product/1381>`_
+
+
+**Software and Dependencies:**
+
+* Adafruit CircuitPython firmware for the supported boards:
+  https://github.com/adafruit/circuitpython/releases
+
+ * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
+"""
+
+import time
+import digitalio
+from micropython import const
 from adafruit_bus_device.spi_device import SPIDevice
 
+__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_VS1053.git"
 
+# pylint: disable=bad-whitespace
 _COMMAND_BAUDRATE = const(250000)   # Speed for command transfers (MUST be slow)
 _DATA_BAUDRATE    = const(8000000)  # Speed for data transfers (fast!)
 
@@ -79,11 +101,11 @@ _VS1053_MODE_SM_SDINEW      = const(0x0800)
 _VS1053_MODE_SM_ADPCM       = const(0x1000)
 _VS1053_MODE_SM_LINE1       = const(0x4000)
 _VS1053_MODE_SM_CLKRANGE    = const(0x8000)
+# pylint: enable=bad-whitespace
 
 
 class VS1053:
-
-    # Class-level buffer for read and write commands.
+    """Class-level buffer for read and write commands."""
     # This is NOT thread/re-entrant safe (by design, for less memory hit).
     _SCI_SPI_BUFFER = bytearray(4)
 
@@ -100,7 +122,8 @@ class VS1053:
         self.reset()
         # Check version is 4 (VS1053 ID).
         if self.version != 4:
-            raise RuntimeError('Expected version 4 (VS1053) but got: {}  Check wiring!'.format(self.version))
+            raise RuntimeError('Expected version 4 (VS1053) but got: {}  Check wiring!'
+                               .format(self.version))
 
     def _sci_write(self, address, value):
         # Write a 16-bit big-endian value to the provided 8-bit address.
@@ -109,6 +132,7 @@ class VS1053:
         self._SCI_SPI_BUFFER[2] = (value >> 8) & 0xFF
         self._SCI_SPI_BUFFER[3] = value & 0xFF
         with self._vs1053_spi as spi:
+            # pylint: disable=no-member
             spi.configure(baudrate=_COMMAND_BAUDRATE)
             spi.write(self._SCI_SPI_BUFFER)
 
@@ -118,10 +142,12 @@ class VS1053:
         self._SCI_SPI_BUFFER[0] = _VS1053_SCI_READ
         self._SCI_SPI_BUFFER[1] = address & 0xFF
         with self._vs1053_spi as spi:
+            # pylint: disable=no-member
             spi.configure(baudrate=_COMMAND_BAUDRATE)
             spi.write(self._SCI_SPI_BUFFER, end=2)
             time.sleep(0.00001) # Delay 10 microseconds (at least)
             spi.readinto(self._SCI_SPI_BUFFER, end=2)
+            # pylint: enable=no-member
         return (self._SCI_SPI_BUFFER[0] << 8) | self._SCI_SPI_BUFFER[1]
 
     def soft_reset(self):
@@ -190,7 +216,8 @@ class VS1053:
 
     def stop_playback(self):
         """Stop any playback of audio."""
-        self._sci_write(_VS1053_REG_MODE, _VS1053_MODE_SM_LINE1 | _VS1053_MODE_SM_SDINEW | _VS1053_MODE_SM_CANCEL)
+        self._sci_write(_VS1053_REG_MODE, _VS1053_MODE_SM_LINE1 | _VS1053_MODE_SM_SDINEW |
+                        _VS1053_MODE_SM_CANCEL)
 
     def play_data(self, data_buffer, start=0, end=None):
         """Send a buffer of file data to the VS1053 for playback.  Make sure
@@ -201,8 +228,10 @@ class VS1053:
                 end = len(data_buffer)
             self._xdcs.value = False
             with self._vs1053_spi as spi:
+                # pylint: disable=no-member
                 spi.configure(baudrate=_DATA_BAUDRATE)
                 spi.write(data_buffer, start=start, end=end)
+                # pylint: enable=no-member
         finally:
             self._xdcs.value = True
 
@@ -219,17 +248,21 @@ class VS1053:
         try:
             self._xdcs.value = False
             with self._vs1053_spi as spi:
+                # pylint: disable=no-member
                 spi.configure(baudrate=_DATA_BAUDRATE)
                 spi.write(bytes([0x53, 0xEF, 0x6E, n & 0xFF, 0x00, 0x00,
                                  0x00, 0x00]))
+                # pylint: enable=no-member
         finally:
             self._xdcs.value = True
         time.sleep(seconds)
         try:
             self._xdcs.value = False
             with self._vs1053_spi as spi:
+                # pylint: disable=no-member
                 spi.configure(baudrate=_DATA_BAUDRATE)
                 spi.write(bytes([0x45, 0x78, 0x69, 0x74, 0x00, 0x00, 0x00,
                                  0x00]))
+                # pylint: enable=no-member
         finally:
             self._xdcs.value = True
