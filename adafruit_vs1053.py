@@ -66,53 +66,56 @@ __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_VS1053.git"
 
 # pylint: disable=bad-whitespace
-_COMMAND_BAUDRATE = const(250000)   # Speed for command transfers (MUST be slow)
-_DATA_BAUDRATE    = const(8000000)  # Speed for data transfers (fast!)
+_COMMAND_BAUDRATE = const(250000)  # Speed for command transfers (MUST be slow)
+_DATA_BAUDRATE = const(8000000)  # Speed for data transfers (fast!)
 
-_VS1053_SCI_READ   = const(0x03)
-_VS1053_SCI_WRITE  = const(0x02)
+_VS1053_SCI_READ = const(0x03)
+_VS1053_SCI_WRITE = const(0x02)
 
-_VS1053_REG_MODE        = const(0x00)
-_VS1053_REG_STATUS      = const(0x01)
-_VS1053_REG_BASS        = const(0x02)
-_VS1053_REG_CLOCKF      = const(0x03)
-_VS1053_REG_DECODETIME  = const(0x04)
-_VS1053_REG_AUDATA      = const(0x05)
-_VS1053_REG_WRAM        = const(0x06)
-_VS1053_REG_WRAMADDR    = const(0x07)
-_VS1053_REG_HDAT0       = const(0x08)
-_VS1053_REG_HDAT1       = const(0x09)
-_VS1053_REG_VOLUME      = const(0x0B)
+_VS1053_REG_MODE = const(0x00)
+_VS1053_REG_STATUS = const(0x01)
+_VS1053_REG_BASS = const(0x02)
+_VS1053_REG_CLOCKF = const(0x03)
+_VS1053_REG_DECODETIME = const(0x04)
+_VS1053_REG_AUDATA = const(0x05)
+_VS1053_REG_WRAM = const(0x06)
+_VS1053_REG_WRAMADDR = const(0x07)
+_VS1053_REG_HDAT0 = const(0x08)
+_VS1053_REG_HDAT1 = const(0x09)
+_VS1053_REG_VOLUME = const(0x0B)
 
-_VS1053_GPIO_DDR        = const(0xC017)
-_VS1053_GPIO_IDATA      = const(0xC018)
-_VS1053_GPIO_ODATA      = const(0xC019)
+_VS1053_GPIO_DDR = const(0xC017)
+_VS1053_GPIO_IDATA = const(0xC018)
+_VS1053_GPIO_ODATA = const(0xC019)
 
-_VS1053_INT_ENABLE          = const(0xC01A)
+_VS1053_INT_ENABLE = const(0xC01A)
 
-_VS1053_MODE_SM_DIFF        = const(0x0001)
-_VS1053_MODE_SM_LAYER12     = const(0x0002)
-_VS1053_MODE_SM_RESET       = const(0x0004)
-_VS1053_MODE_SM_CANCEL      = const(0x0008)
-_VS1053_MODE_SM_EARSPKLO    = const(0x0010)
-_VS1053_MODE_SM_TESTS       = const(0x0020)
-_VS1053_MODE_SM_STREAM      = const(0x0040)
-_VS1053_MODE_SM_SDINEW      = const(0x0800)
-_VS1053_MODE_SM_ADPCM       = const(0x1000)
-_VS1053_MODE_SM_LINE1       = const(0x4000)
-_VS1053_MODE_SM_CLKRANGE    = const(0x8000)
+_VS1053_MODE_SM_DIFF = const(0x0001)
+_VS1053_MODE_SM_LAYER12 = const(0x0002)
+_VS1053_MODE_SM_RESET = const(0x0004)
+_VS1053_MODE_SM_CANCEL = const(0x0008)
+_VS1053_MODE_SM_EARSPKLO = const(0x0010)
+_VS1053_MODE_SM_TESTS = const(0x0020)
+_VS1053_MODE_SM_STREAM = const(0x0040)
+_VS1053_MODE_SM_SDINEW = const(0x0800)
+_VS1053_MODE_SM_ADPCM = const(0x1000)
+_VS1053_MODE_SM_LINE1 = const(0x4000)
+_VS1053_MODE_SM_CLKRANGE = const(0x8000)
 # pylint: enable=bad-whitespace
 
 
 class VS1053:
     """Class-level buffer for read and write commands."""
+
     # This is NOT thread/re-entrant safe (by design, for less memory hit).
     _SCI_SPI_BUFFER = bytearray(4)
 
     def __init__(self, spi, cs, xdcs, dreq):
         # Create SPI device for VS1053
         self._cs = digitalio.DigitalInOut(cs)
-        self._vs1053_spi = SPIDevice(spi, self._cs, baudrate=_COMMAND_BAUDRATE, polarity=0, phase=0)
+        self._vs1053_spi = SPIDevice(
+            spi, self._cs, baudrate=_COMMAND_BAUDRATE, polarity=0, phase=0
+        )
         # Setup control lines.
         self._xdcs = digitalio.DigitalInOut(xdcs)
         self._xdcs.switch_to_output(value=True)
@@ -122,8 +125,11 @@ class VS1053:
         self.reset()
         # Check version is 4 (VS1053 ID).
         if self.version != 4:
-            raise RuntimeError('Expected version 4 (VS1053) but got: {}  Check wiring!'
-                               .format(self.version))
+            raise RuntimeError(
+                "Expected version 4 (VS1053) but got: {}  Check wiring!".format(
+                    self.version
+                )
+            )
 
     def _sci_write(self, address, value):
         # Write a 16-bit big-endian value to the provided 8-bit address.
@@ -145,14 +151,16 @@ class VS1053:
             # pylint: disable=no-member
             spi.configure(baudrate=_COMMAND_BAUDRATE)
             spi.write(self._SCI_SPI_BUFFER, end=2)
-            time.sleep(0.00001) # Delay 10 microseconds (at least)
+            time.sleep(0.00001)  # Delay 10 microseconds (at least)
             spi.readinto(self._SCI_SPI_BUFFER, end=2)
             # pylint: enable=no-member
         return (self._SCI_SPI_BUFFER[0] << 8) | self._SCI_SPI_BUFFER[1]
 
     def soft_reset(self):
         """Perform a quick soft reset of the VS1053."""
-        self._sci_write(_VS1053_REG_MODE, _VS1053_MODE_SM_SDINEW | _VS1053_MODE_SM_RESET)
+        self._sci_write(
+            _VS1053_REG_MODE, _VS1053_MODE_SM_SDINEW | _VS1053_MODE_SM_RESET
+        )
         time.sleep(0.1)
 
     def reset(self):
@@ -198,7 +206,7 @@ class VS1053:
         """Return the bit rate in bytes per second (computed each second).
         Useful to know if a song is being played and how fast it's happening.
         """
-        self._sci_write(_VS1053_REG_WRAMADDR, 0x1e05)
+        self._sci_write(_VS1053_REG_WRAMADDR, 0x1E05)
         return self._sci_read(_VS1053_REG_WRAM)
 
     def start_playback(self):
@@ -207,17 +215,21 @@ class VS1053:
         buffers of music data to the play_data function.
         """
         # Reset playback.
-        self._sci_write(_VS1053_REG_MODE, _VS1053_MODE_SM_LINE1 | _VS1053_MODE_SM_SDINEW)
+        self._sci_write(
+            _VS1053_REG_MODE, _VS1053_MODE_SM_LINE1 | _VS1053_MODE_SM_SDINEW
+        )
         # Resync.
-        self._sci_write(_VS1053_REG_WRAMADDR, 0x1e29)
+        self._sci_write(_VS1053_REG_WRAMADDR, 0x1E29)
         self._sci_write(_VS1053_REG_WRAM, 0)
         # Set time to zero.
         self.decode_time = 0
 
     def stop_playback(self):
         """Stop any playback of audio."""
-        self._sci_write(_VS1053_REG_MODE, _VS1053_MODE_SM_LINE1 | _VS1053_MODE_SM_SDINEW |
-                        _VS1053_MODE_SM_CANCEL)
+        self._sci_write(
+            _VS1053_REG_MODE,
+            _VS1053_MODE_SM_LINE1 | _VS1053_MODE_SM_SDINEW | _VS1053_MODE_SM_CANCEL,
+        )
 
     def play_data(self, data_buffer, start=0, end=None):
         """Send a buffer of file data to the VS1053 for playback.  Make sure
@@ -250,8 +262,7 @@ class VS1053:
             with self._vs1053_spi as spi:
                 # pylint: disable=no-member
                 spi.configure(baudrate=_DATA_BAUDRATE)
-                spi.write(bytes([0x53, 0xEF, 0x6E, n & 0xFF, 0x00, 0x00,
-                                 0x00, 0x00]))
+                spi.write(bytes([0x53, 0xEF, 0x6E, n & 0xFF, 0x00, 0x00, 0x00, 0x00]))
                 # pylint: enable=no-member
         finally:
             self._xdcs.value = True
@@ -261,8 +272,7 @@ class VS1053:
             with self._vs1053_spi as spi:
                 # pylint: disable=no-member
                 spi.configure(baudrate=_DATA_BAUDRATE)
-                spi.write(bytes([0x45, 0x78, 0x69, 0x74, 0x00, 0x00, 0x00,
-                                 0x00]))
+                spi.write(bytes([0x45, 0x78, 0x69, 0x74, 0x00, 0x00, 0x00, 0x00]))
                 # pylint: enable=no-member
         finally:
             self._xdcs.value = True
