@@ -154,7 +154,7 @@ class VS1053:
             time.sleep(0.00001)  # Delay 10 microseconds (at least)
             spi.readinto(self._SCI_SPI_BUFFER, end=2)
             # pylint: enable=no-member
-        return (self._SCI_SPI_BUFFER[0] << 8) | self._SCI_SPI_BUFFER[1]
+        return (self._SCI_SPI_BUFFER[2] << 8) | self._SCI_SPI_BUFFER[3]
 
     def soft_reset(self):
         """Perform a quick soft reset of the VS1053."""
