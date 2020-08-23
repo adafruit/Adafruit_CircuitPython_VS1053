@@ -65,7 +65,6 @@ from adafruit_bus_device.spi_device import SPIDevice
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_VS1053.git"
 
-# pylint: disable=bad-whitespace
 _COMMAND_BAUDRATE = const(250000)  # Speed for command transfers (MUST be slow)
 _DATA_BAUDRATE = const(8000000)  # Speed for data transfers (fast!)
 
@@ -101,7 +100,6 @@ _VS1053_MODE_SM_SDINEW = const(0x0800)
 _VS1053_MODE_SM_ADPCM = const(0x1000)
 _VS1053_MODE_SM_LINE1 = const(0x4000)
 _VS1053_MODE_SM_CLKRANGE = const(0x8000)
-# pylint: enable=bad-whitespace
 
 
 class VS1053:
