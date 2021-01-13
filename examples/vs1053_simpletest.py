@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
+# SPDX-License-Identifier: MIT
+
 # Example of sound playback from VS1053 FeatherWing.  Can be modified to work
 # with the breakout by changing the SD card and SPI pins mentioned below.
 # NOTE:
