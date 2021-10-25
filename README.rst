@@ -67,6 +67,11 @@ Usage Example
 
 See examples/sdfile_play.py.
 
+Documentation
+=============
+
+API documentation for this library can be found on `Read the Docs <https://circuitpython.readthedocs.io/projects/vs1053/en/latest/>`_.
+
 Contributing
 ============
 
