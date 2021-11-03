@@ -1,3 +1,5 @@
+# vs1053 MIDI example by Eric Rosenbaum
+
 import board
 import time
 import busio
@@ -37,16 +39,35 @@ def setChannelInstrument(channel, num):
 def setChannelPan(channel, pan):
     uart.write(bytearray([MIDI_CHAN_MSG | channel, MIDI_CHAN_PAN, pan]))
 
+# Set up a piano instrument on channel 0
 setChannelBank(0, VS1053_BANK_MELODY)
 setChannelVolume(0, 127)
+setChannelInstrument(0, 0) # piano
 
+# Play Do Re Mi
+noteOn(0, 60, 127)
+time.sleep(0.5)
+noteOff(0, 60)
+
+noteOn(0, 62, 127)
+time.sleep(0.5)
+noteOff(0, 62)
+
+noteOn(0, 64, 127)
+time.sleep(0.5)
+noteOff(0, 64)
+
+time.sleep(1)
+
+# Play a major scale on all 127 instruments!
+# See the datasheet page 32 for a list of instruments:
+# https://cdn-shop.adafruit.com/datasheets/vs1053.pdf
 scale = [60, 62, 64, 65, 67, 69, 71, 72]
-
 for instrument in range(127):
     print('instrument: ' + str(instrument))
     setChannelInstrument(0, instrument)
     for note in scale:
-        noteOn(0, note, 60)
+        noteOn(0, note, 127)
         time.sleep(0.1)
     time.sleep(1)
     for note in scale:
