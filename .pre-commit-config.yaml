@@ -1,4 +1,4 @@
-repos:
+# SPDX-FileCopyrightText: 2020 Diego Elio Pettenò## SPDX-License-Identifier: Unlicenserepos:
   - repo: https://github.com/python/black
     rev: 22.3.0
     hooks:
