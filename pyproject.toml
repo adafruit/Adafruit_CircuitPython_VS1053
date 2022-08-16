@@ -12,7 +12,7 @@ requires = [
 [project]
 name = "adafruit-circuitpython-vs1053"
 description = "Driver for interacting and playing media files with the VS1053 audio codec over a SPI connection."
-version = "0.0.0-auto.0"
+version = "0.0.0+auto.0"
 readme = "README.rst"
 authors = [
     {name = "Adafruit Industries", email = "circuitpython@adafruit.com"}
