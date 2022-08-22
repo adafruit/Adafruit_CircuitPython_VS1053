@@ -47,7 +47,7 @@ from adafruit_bus_device.spi_device import SPIDevice
 
 try:
     from typing import Optional
-    from digitalio import DigitalInOut
+    from circuitpython_typing import ReadableBuffer
     from microcontroller import Pin
     from busio import SPI
 except ImportError:
@@ -99,7 +99,7 @@ class VS1053:
     # This is NOT thread/re-entrant safe (by design, for less memory hit).
     _SCI_SPI_BUFFER = bytearray(4)
 
-    def __init__(self, spi: SPI, cs: DigitalInOut, xdcs: Pin, dreq: Pin) -> None:
+    def __init__(self, spi: SPI, cs: Pin, xdcs: Pin, dreq: Pin) -> None:
         # Create SPI device for VS1053
         self._cs = digitalio.DigitalInOut(cs)
         self._vs1053_spi = SPIDevice(
@@ -118,7 +118,7 @@ class VS1053:
                 f"Expected version 4 (VS1053) but got: {self.version}  Check wiring!"
             )
 
-    def _sci_write(self, address, value) -> None:
+    def _sci_write(self, address: int, value: int) -> None:
         # Write a 16-bit big-endian value to the provided 8-bit address.
         self._SCI_SPI_BUFFER[0] = _VS1053_SCI_WRITE
         self._SCI_SPI_BUFFER[1] = address & 0xFF
@@ -218,7 +218,7 @@ class VS1053:
         )
 
     def play_data(
-        self, data_buffer: bytearray, start: int = 0, end: Optional[int] = None
+        self, data_buffer: ReadableBuffer, start: int = 0, end: Optional[int] = None
     ):
         """Send a buffer of file data to the VS1053 for playback.  Make sure
         the ready_for_data property is True before calling!
@@ -235,7 +235,7 @@ class VS1053:
         finally:
             self._xdcs.value = True
 
-    def sine_test(self, n: int, seconds: int):
+    def sine_test(self, n: int, seconds: float) -> None:
         """Play a sine wave for the specified number of seconds. Useful to
         test the VS1053 is working.
         """
