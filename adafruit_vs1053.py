@@ -13,7 +13,7 @@ a SPI connection.
     wave test currently works.  The problem is that pure Python code is currently
     too slow to keep up with feeding data to the VS1053 fast enough.  There's no
     interrupt support so Python code has to monitor the DREQ line and provide a
-    small buffer of data when ready, but the overhead of the interpretor means we
+    small buffer of data when ready, but the overhead of the interpreter means we
     can't keep up.  Optimizing SPI to use DMA transfers could help but ultimately
     an interrupt-based approach is likely what can make this work better (or C
     functions built in to custom builds that monitor the DREQ line and feed a
@@ -44,6 +44,14 @@ import time
 import digitalio
 from micropython import const
 from adafruit_bus_device.spi_device import SPIDevice
+
+try:
+    from typing import Optional
+    from circuitpython_typing import ReadableBuffer
+    from microcontroller import Pin
+    from busio import SPI
+except ImportError:
+    pass
 
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_VS1053.git"
@@ -91,7 +99,7 @@ class VS1053:
     # This is NOT thread/re-entrant safe (by design, for less memory hit).
     _SCI_SPI_BUFFER = bytearray(4)
 
-    def __init__(self, spi, cs, xdcs, dreq):
+    def __init__(self, spi: SPI, cs: Pin, xdcs: Pin, dreq: Pin) -> None:
         # Create SPI device for VS1053
         self._cs = digitalio.DigitalInOut(cs)
         self._vs1053_spi = SPIDevice(
@@ -107,12 +115,10 @@ class VS1053:
         # Check version is 4 (VS1053 ID).
         if self.version != 4:
             raise RuntimeError(
-                "Expected version 4 (VS1053) but got: {}  Check wiring!".format(
-                    self.version
-                )
+                f"Expected version 4 (VS1053) but got: {self.version}  Check wiring!"
             )
 
-    def _sci_write(self, address, value):
+    def _sci_write(self, address: int, value: int) -> None:
         # Write a 16-bit big-endian value to the provided 8-bit address.
         self._SCI_SPI_BUFFER[0] = _VS1053_SCI_WRITE
         self._SCI_SPI_BUFFER[1] = address & 0xFF
@@ -123,7 +129,7 @@ class VS1053:
             spi.configure(baudrate=_COMMAND_BAUDRATE)
             spi.write(self._SCI_SPI_BUFFER)
 
-    def _sci_read(self, address):
+    def _sci_read(self, address: int) -> int:
         # Read a 16-bit big-endian value from the provided 8-bit address.
         # Write a 16-bit big-endian value to the provided 8-bit address.
         self._SCI_SPI_BUFFER[0] = _VS1053_SCI_READ
@@ -137,14 +143,14 @@ class VS1053:
             # pylint: enable=no-member
         return (self._SCI_SPI_BUFFER[0] << 8) | self._SCI_SPI_BUFFER[1]
 
-    def soft_reset(self):
+    def soft_reset(self) -> None:
         """Perform a quick soft reset of the VS1053."""
         self._sci_write(
             _VS1053_REG_MODE, _VS1053_MODE_SM_SDINEW | _VS1053_MODE_SM_RESET
         )
         time.sleep(0.1)
 
-    def reset(self):
+    def reset(self) -> None:
         """Perform a longer full reset with clock and volume reset too."""
         self._xdcs.value = True
         self.soft_reset()
@@ -152,7 +158,7 @@ class VS1053:
         self._sci_write(_VS1053_REG_CLOCKF, 0x6000)
         self.set_volume(40, 40)
 
-    def set_volume(self, left, right):
+    def set_volume(self, left: int, right: int) -> None:
         """Set the volume of the left and right channels to the provided byte
         value (0-255), the lower the louder.
         """
@@ -160,36 +166,36 @@ class VS1053:
         self._sci_write(_VS1053_REG_VOLUME, volume)
 
     @property
-    def ready_for_data(self):
+    def ready_for_data(self) -> bool:
         """Return True if the VS1053 is ready to accept data, false otherwise."""
         return self._dreq.value
 
     @property
-    def version(self):
+    def version(self) -> int:
         """Return the status register version value."""
         return (self._sci_read(_VS1053_REG_STATUS) >> 4) & 0x0F
 
     @property
-    def decode_time(self):
+    def decode_time(self) -> int:
         """Return the decode time register value.  This is the amount of time
         the current file has been played back in seconds."""
         return self._sci_read(_VS1053_REG_DECODETIME)
 
     @decode_time.setter
-    def decode_time(self, value):
+    def decode_time(self, value: int) -> None:
         """Set the decode time register value."""
         # From datasheet, set twice to ensure it is correctly set (pg. 43)
         self._sci_write(_VS1053_REG_DECODETIME, value)
 
     @property
-    def byte_rate(self):
+    def byte_rate(self) -> int:
         """Return the bit rate in bytes per second (computed each second).
         Useful to know if a song is being played and how fast it's happening.
         """
         self._sci_write(_VS1053_REG_WRAMADDR, 0x1E05)
         return self._sci_read(_VS1053_REG_WRAM)
 
-    def start_playback(self):
+    def start_playback(self) -> None:
         """Prepare for playback of a file.  After calling this check the
         ready_for_data property continually until true and then send in
         buffers of music data to the play_data function.
@@ -204,14 +210,16 @@ class VS1053:
         # Set time to zero.
         self.decode_time = 0
 
-    def stop_playback(self):
+    def stop_playback(self) -> None:
         """Stop any playback of audio."""
         self._sci_write(
             _VS1053_REG_MODE,
             _VS1053_MODE_SM_LINE1 | _VS1053_MODE_SM_SDINEW | _VS1053_MODE_SM_CANCEL,
         )
 
-    def play_data(self, data_buffer, start=0, end=None):
+    def play_data(
+        self, data_buffer: ReadableBuffer, start: int = 0, end: Optional[int] = None
+    ):
         """Send a buffer of file data to the VS1053 for playback.  Make sure
         the ready_for_data property is True before calling!
         """
@@ -227,7 +235,7 @@ class VS1053:
         finally:
             self._xdcs.value = True
 
-    def sine_test(self, n, seconds):
+    def sine_test(self, n: int, seconds: float) -> None:
         """Play a sine wave for the specified number of seconds. Useful to
         test the VS1053 is working.
         """
