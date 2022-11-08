@@ -99,7 +99,9 @@ class VS1053:
     # This is NOT thread/re-entrant safe (by design, for less memory hit).
     _SCI_SPI_BUFFER = bytearray(4)
 
-    def __init__(self, spi: SPI, cs: Pin, xdcs: Pin, dreq: Pin) -> None:
+    def __init__(  # pylint: disable=invalid-name
+        self, spi: SPI, cs: Pin, xdcs: Pin, dreq: Pin
+    ) -> None:
         # Create SPI device for VS1053
         self._cs = digitalio.DigitalInOut(cs)
         self._vs1053_spi = SPIDevice(
