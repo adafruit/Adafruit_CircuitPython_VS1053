@@ -10,14 +10,13 @@
 # We'll need to look into interrupt support perhaps to monitor DREQ like in the
 # arduino library.  Basic sine wave playback does however work and monitoring
 # of attributes like status register and other VS1053 state is accessible.
+import adafruit_sdcard
 import board
 import busio
 import digitalio
 import storage
 
-import adafruit_sdcard
 import adafruit_vs1053
-
 
 # Define pins connected to VS1053:
 
@@ -71,7 +70,7 @@ print("Done playing tone!")
 # the VS1053 making static, stopping, and eventually requiring a hard reset.
 # We'll need to look into interrupt support perhaps to monitor DREQ like in the
 # arduino library.
-print("Playing {}...".format(PLAYBACK_FILE))
+print(f"Playing {PLAYBACK_FILE}...")
 vs1053.start_playback()
 with open(PLAYBACK_FILE, "rb") as infile:
     music_data = infile.read(BUFFER_SIZE)
