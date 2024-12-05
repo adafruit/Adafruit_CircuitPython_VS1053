@@ -41,15 +41,17 @@ Implementation Notes
 """
 
 import time
+
 import digitalio
-from micropython import const
 from adafruit_bus_device.spi_device import SPIDevice
+from micropython import const
 
 try:
     from typing import Optional
+
+    from busio import SPI
     from circuitpython_typing import ReadableBuffer
     from microcontroller import Pin
-    from busio import SPI
 except ImportError:
     pass
 
@@ -104,9 +106,7 @@ class VS1053:
     ) -> None:
         # Create SPI device for VS1053
         self._cs = digitalio.DigitalInOut(cs)
-        self._vs1053_spi = SPIDevice(
-            spi, self._cs, baudrate=_COMMAND_BAUDRATE, polarity=0, phase=0
-        )
+        self._vs1053_spi = SPIDevice(spi, self._cs, baudrate=_COMMAND_BAUDRATE, polarity=0, phase=0)
         # Setup control lines.
         self._xdcs = digitalio.DigitalInOut(xdcs)
         self._xdcs.switch_to_output(value=True)
@@ -147,9 +147,7 @@ class VS1053:
 
     def soft_reset(self) -> None:
         """Perform a quick soft reset of the VS1053."""
-        self._sci_write(
-            _VS1053_REG_MODE, _VS1053_MODE_SM_SDINEW | _VS1053_MODE_SM_RESET
-        )
+        self._sci_write(_VS1053_REG_MODE, _VS1053_MODE_SM_SDINEW | _VS1053_MODE_SM_RESET)
         time.sleep(0.1)
 
     def reset(self) -> None:
@@ -203,9 +201,7 @@ class VS1053:
         buffers of music data to the play_data function.
         """
         # Reset playback.
-        self._sci_write(
-            _VS1053_REG_MODE, _VS1053_MODE_SM_LINE1 | _VS1053_MODE_SM_SDINEW
-        )
+        self._sci_write(_VS1053_REG_MODE, _VS1053_MODE_SM_LINE1 | _VS1053_MODE_SM_SDINEW)
         # Resync.
         self._sci_write(_VS1053_REG_WRAMADDR, 0x1E29)
         self._sci_write(_VS1053_REG_WRAM, 0)
@@ -219,9 +215,7 @@ class VS1053:
             _VS1053_MODE_SM_LINE1 | _VS1053_MODE_SM_SDINEW | _VS1053_MODE_SM_CANCEL,
         )
 
-    def play_data(
-        self, data_buffer: ReadableBuffer, start: int = 0, end: Optional[int] = None
-    ):
+    def play_data(self, data_buffer: ReadableBuffer, start: int = 0, end: Optional[int] = None):
         """Send a buffer of file data to the VS1053 for playback.  Make sure
         the ready_for_data property is True before calling!
         """

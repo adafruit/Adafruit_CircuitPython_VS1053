@@ -13,9 +13,9 @@ Introduction
     :target: https://github.com/adafruit/Adafruit_CircuitPython_VS1053/actions/
     :alt: Build Status
 
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
-    :alt: Code Style: Black
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+    :target: https://github.com/astral-sh/ruff
+    :alt: Code Style: Ruff
 
 Driver for interacting and playing media files with the VS1053 audio codec over
 a SPI connection.
