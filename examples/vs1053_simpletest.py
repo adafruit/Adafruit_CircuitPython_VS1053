@@ -74,7 +74,7 @@ print(f"Playing {PLAYBACK_FILE}...")
 vs1053.start_playback()
 with open(PLAYBACK_FILE, "rb") as infile:
     music_data = infile.read(BUFFER_SIZE)
-    while music_data is not None and music_data != "":
+    while music_data:
         while not vs1053.ready_for_data:
             pass
         vs1053.play_data(music_data, end=len(music_data))
