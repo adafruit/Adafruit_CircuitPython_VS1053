@@ -101,9 +101,7 @@ class VS1053:
     # This is NOT thread/re-entrant safe (by design, for less memory hit).
     _SCI_SPI_BUFFER = bytearray(4)
 
-    def __init__(  # pylint: disable=invalid-name
-        self, spi: SPI, cs: Pin, xdcs: Pin, dreq: Pin
-    ) -> None:
+    def __init__(self, spi: SPI, cs: Pin, xdcs: Pin, dreq: Pin) -> None:
         # Create SPI device for VS1053
         self._cs = digitalio.DigitalInOut(cs)
         self._vs1053_spi = SPIDevice(spi, self._cs, baudrate=_COMMAND_BAUDRATE, polarity=0, phase=0)
@@ -127,7 +125,6 @@ class VS1053:
         self._SCI_SPI_BUFFER[2] = (value >> 8) & 0xFF
         self._SCI_SPI_BUFFER[3] = value & 0xFF
         with self._vs1053_spi as spi:
-            # pylint: disable=no-member
             spi.configure(baudrate=_COMMAND_BAUDRATE)
             spi.write(self._SCI_SPI_BUFFER)
 
@@ -137,12 +134,10 @@ class VS1053:
         self._SCI_SPI_BUFFER[0] = _VS1053_SCI_READ
         self._SCI_SPI_BUFFER[1] = address & 0xFF
         with self._vs1053_spi as spi:
-            # pylint: disable=no-member
             spi.configure(baudrate=_COMMAND_BAUDRATE)
             spi.write(self._SCI_SPI_BUFFER, end=2)
             time.sleep(0.00001)  # Delay 10 microseconds (at least)
             spi.readinto(self._SCI_SPI_BUFFER, end=2)
-            # pylint: enable=no-member
         return (self._SCI_SPI_BUFFER[0] << 8) | self._SCI_SPI_BUFFER[1]
 
     def soft_reset(self) -> None:
@@ -224,10 +219,8 @@ class VS1053:
                 end = len(data_buffer)
             self._xdcs.value = False
             with self._vs1053_spi as spi:
-                # pylint: disable=no-member
                 spi.configure(baudrate=_DATA_BAUDRATE)
                 spi.write(data_buffer, start=start, end=end)
-                # pylint: enable=no-member
         finally:
             self._xdcs.value = True
 
@@ -244,19 +237,15 @@ class VS1053:
         try:
             self._xdcs.value = False
             with self._vs1053_spi as spi:
-                # pylint: disable=no-member
                 spi.configure(baudrate=_DATA_BAUDRATE)
                 spi.write(bytes([0x53, 0xEF, 0x6E, n & 0xFF, 0x00, 0x00, 0x00, 0x00]))
-                # pylint: enable=no-member
         finally:
             self._xdcs.value = True
         time.sleep(seconds)
         try:
             self._xdcs.value = False
             with self._vs1053_spi as spi:
-                # pylint: disable=no-member
                 spi.configure(baudrate=_DATA_BAUDRATE)
                 spi.write(bytes([0x45, 0x78, 0x69, 0x74, 0x00, 0x00, 0x00, 0x00]))
-                # pylint: enable=no-member
         finally:
             self._xdcs.value = True

@@ -6,6 +6,7 @@ target-version = "py38"
 line-length = 100
 
 [lint]
+preview = true
 select = ["I", "PL", "UP"]
 
 extend-select = [
@@ -92,7 +93,14 @@ ignore = [
     "PLR2004", # magic-value-comparison
     "UP030", # format literals
     "PLW1514",  # unspecified-encoding
-
+    "PLR0913", # too-many-arguments
+    "PLR0915", # too-many-statements
+    "PLR0917", # too-many-positional-arguments
+    "PLR0904", # too-many-public-methods
+    "PLR0912", # too-many-branches
+    "PLR0916", # too-many-boolean-expressions
+    "PLR6301", # could-be-static no-self-use
+    "PLC0415", # import outside toplevel
 ]
 
 [format]
